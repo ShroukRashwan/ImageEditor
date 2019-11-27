@@ -13,6 +13,8 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
+
 import javax.imageio.ImageIO;
 
 import javax.swing.JFileChooser;
@@ -55,16 +57,21 @@ class ImageController extends Canvas {
     int centerX, centerY;	
     Point startDrag, endDrag;
     int partStartX, partStartY , partW, partH;
+    BufferedImage [] imageCopy ;
+    boolean [] statesCopy;
 
     //dashed line
     final static float dash1[] = { 10.0f };
-    final static BasicStroke dashed = new BasicStroke(3.0f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
+    final static BasicStroke dashed = new BasicStroke(4.0f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, dash1, 0.0f);
 
     public ImageController(EditImage frame)
     {
        screenDimension=getToolkit().getScreenSize(); //get the screen size   
        centerX=(int)screenDimension.getWidth()/2; //half of the screen width
        centerY=(int)screenDimension.getHeight()/2;//half of the screen height
+       
+       imageCopy = new BufferedImage[4];
+       statesCopy = new boolean[7];
 
        final EditImage mainFrame = frame;
 
@@ -271,9 +278,9 @@ class ImageController extends Canvas {
                 if (isChanged || isBlured || isInverted)
                 {
               
-                   edited = combineImages(bufferedImage, cropedEdited);
-                  // g2d.drawImage(cropedEdited,0,0,null); 
-                   g2d.drawImage(edited,0,0,null); 
+                  edited = combineImages(bufferedImage, cropedEdited);
+                   //g2d.drawImage(cropedEdited,0,0,null); 
+                  g2d.drawImage(edited,0,0,null); 
                 
                 }
                 else
@@ -369,7 +376,7 @@ class ImageController extends Canvas {
     
    public void filterImage()
    {
-	   if (!isInverted || !isBlured )
+	   if (!isInverted && !isBlured )
        {
             cropedEdited = cropedPart;
        }
@@ -382,7 +389,7 @@ class ImageController extends Canvas {
    
    public void blurImage()
    {
-        if (!isChanged || !isBlured )
+        if (!isChanged && !isBlured )
         {
              cropedEdited = cropedPart;
         }
@@ -406,6 +413,25 @@ class ImageController extends Canvas {
         System.out.println("Error in saving the file");
     }
   }
+   
+   public void saveActions()
+   {
+	   imageCopy[0] = bufferedImage;
+	   imageCopy[1] = edited;
+	   imageCopy[2] = cropedPart;
+	   imageCopy[3] = bufferedImage;
+	   
+	   statesCopy[0] = isBlured;
+	   statesCopy[1] = isReadyToSave;
+	   statesCopy[2] = isChanged;
+	   statesCopy[3] = isInverted;
+	   statesCopy[4] = isRectangularCrop;
+	   statesCopy[5] = isCircularCrop;
+	   statesCopy[6] = isImageLoaded;
+	   
+   }
+   
+   
 
 }
 
@@ -680,10 +706,7 @@ public class ImageBrightness extends JFrame implements ChangeListener
 	{
 	   controller.setBrightnessLevel(slider.getValue()/10.0f);
 	   controller.setChanged(true);   
-	   controller.filterImage();
-	   controller.repaint();
-	   //enableSaving(true);
-	   
+	   controller.filterImage();	   
 	}
 }
 
